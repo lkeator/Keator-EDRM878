@@ -1,0 +1,113 @@
+---
+title: "R Notebook"
+author: "Lynsey Keator"
+date: "May 18, 2020"
+output: html_notebook
+---
+
+Complete problems 1.9 and 2.18.
+
+## Question 1.9
+
+Children were asked to build towers out of cubical and cylindrical blocks as high as they could, and the number of blocks used and the time taken were recorded. 
+
+1. Load the data frame blocks from the package GLMsData and produce a summary of the variables.
+
+```{r}
+library(tidyverse)
+library(GLMsData)
+data(blocks)
+```
+
+```{r}
+summary(blocks)
+```
+```{r}
+blocks$Trial <- factor(blocks$Trial,
+                       levels=c(1,2),
+                       labels=c("1", "2"))
+```
+
+```{r}
+summary(blocks)
+```
+
+2. Produce plots to examine the relationship between the *time* taken to build towers, and the block type, trial number and age.
+```{r}
+ggplot(blocks, aes(x = Shape, y = Time, color = Shape)) +
+  geom_boxplot() +
+  labs( x = "Block Type", y = "Time to Build (in min)",
+        title = "Time to Build vs Block Type",
+        caption = "This is a graph comparing time to build for different block shapes") +
+  theme(legend.position = "none") +
+  scale_x_discrete(labels = c('Cube', 'Cylinder'))
+
+ggplot(blocks, aes(x = Trial, y = Time, color = Trial)) +
+  geom_boxplot() +
+  labs( x = "Trial Number", y = "Time to Build (min)",
+        title = "Time to Build vs Trial Number",
+        caption = "This is a graph comparing time to build for each trial") +
+  theme(legend.position = "none") +
+  scale_x_discrete(labels = c('#1', '#2'))
+
+ggplot(blocks, aes(x = Age, y = Time)) +
+  geom_point() +
+  labs( x = "Age", y = "Time to Build (min)",
+        title = "Time to Build vs Age",
+        caption = "This is a graph comparing time to build and age") +
+  theme(legend.position = "none") 
+```
+
+
+3. In words, summarize the relationship between the four variables.
+
+4. Produce plots to examine the relationship between the *number* of blocks used to build towers, and the block type, trial number, and age.
+```{r}
+ggplot(blocks, aes(x = Shape, y = Number, color = Shape)) +
+  geom_boxplot() +
+  labs( x = "Block Type", y = "Number of Blocks Used to Build Towers",
+        title = "Number of Blocks Used vs Block Type",
+        caption = "This is a graph comparing number of blocks used and block type") +
+  theme(legend.position = "none") +
+  scale_x_discrete(labels = c('Cube', 'Cylinder'))
+
+
+ggplot(blocks, aes(x = Trial, y = Number, color = Trial)) +
+  geom_boxplot() +
+  labs( x = "Trial Number", y = "Number of Blocks Used to Build Towers",
+        title = "Number of Blocks Used vs Trial Number",
+        caption = "This is a graph comparing number of blocks used and trial number") +
+  theme(legend.position = "none") +
+  scale_x_discrete(labels = c('1', '2'))
+
+
+ggplot(blocks, aes(x = Age, y = Number)) +
+  geom_point() +
+  labs( x = "Age", y = "Number of Blocks Used to Build Towers",
+        title = "Number of Blocks Used vs Age",
+        caption = "This is a graph comparing number of blocks used and age") +
+  theme(legend.position = "none") 
+
+```
+
+5. Summarize the relationship between the four variables in words.
+
+## Question 2.18
+
+In this Problem, we focus on the *time taken to build the towers* (The number of blocks used to build towers is studied in Problem 10.19)
+
+1. The data were originally examined in Problem 1.9. Using these plots, summarize the possible relationships of the explanatory variables with the time taken. Which assumptions, if any, appear to be violated?
+
+2. Suppose a model with the systematic component Time ~ Age * Shape was needed to model the data. What would such a systematic component imply about the relationship between the variables?
+
+3. Suppose a model with the systematic componenet Time ~ Age * Trial was needed to model the data. What would such a systematic component imply about the relationship between the variables?
+
+4. Suppose a model with the systematic component Time ~ (Age + Shape) * Trial was needed to model the data. What would such a systematic component imply about the relationship between the variables?
+
+5. One hypothesis of interest is whether the time taken to build the tower differs between cubical and cylindrical shaped blocks. Test this hypothesis by fitting a linear regression model.
+
+6. Fit the unweighted regression model, then plot both regression lines on a plot of data. Comment on the differences.
+
+7. Compute the 95% confidence intervals for the fitted values from the weighted regression line, and also plot these.
+
+8. Interpret the model.
