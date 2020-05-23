@@ -1,0 +1,169 @@
+---
+title: "Assignment 1: Chapters 1 + 2 (Graded)"
+author: "Lynsey Keator"
+date: "May 18, 2020"
+output: html_document
+---
+
+***
+
+##### Grading comments
+
+**Nice work! I love that you used the tidyverse!**
+
+**A main take-away for me, that I *think* you got, is that it took longer with**
+**cubes because they built higher towers with cubes. This was especially true**
+**of some of the older children who took the longest but built the highest**
+**towers.**
+
+**Score: 20/20**
+
+***
+
+Complete problems 1.9 and 2.18.
+
+## Question 1.9
+
+Children were asked to build towers out of cubical and cylindrical blocks as high as they could, and the number of blocks used and the time taken were recorded. 
+
+1. Load the data frame blocks from the package GLMsData and produce a summary of the variables.
+
+```{r include=FALSE}
+library(tidyverse)
+library(GLMsData)
+data(blocks)
+```
+
+```{r include=FALSE}
+blocks$Trial <- factor(blocks$Trial,
+                       levels=c(1,2),
+                       labels=c("1", "2"))
+```
+
+```{r echo=FALSE}
+summary(blocks)
+```
+
+2. Produce plots to examine the relationship between the *time* taken to build towers, and the block type, trial number and age.
+```{r echo=FALSE}
+ggplot(blocks, aes(x = Shape, y = Time, color = Shape)) +
+  geom_boxplot() +
+  labs( x = "Block Type", y = "Time to Build (in sec)",
+        title = "Time to Build vs Block Type",
+        caption = "This is a graph comparing time to build for different block shapes") +
+  theme(legend.position = "none") +
+  scale_x_discrete(labels = c('Cube', 'Cylinder'))
+
+ggplot(blocks, aes(x = Trial, y = Time, color = Trial)) +
+  geom_boxplot() +
+  labs( x = "Trial Number", y = "Time to Build (sec)",
+        title = "Time to Build vs Trial Number",
+        caption = "This is a graph comparing time to build for each trial") +
+  theme(legend.position = "none") +
+  scale_x_discrete(labels = c('#1', '#2'))
+
+ggplot(blocks, aes(x = Age, y = Time)) +
+  geom_point() +
+  labs( x = "Age", y = "Time to Build (sec)",
+        title = "Time to Build vs Age",
+        caption = "This is a graph comparing time to build and age") +
+  theme(legend.position = "none") +
+  geom_smooth(method='lm')
+```
+
+**3. In words, summarize the relationship between the four variables.**
+
+Shape type seems to be the most important explanatory variable when considering time to build. Children were fastest and had less variation when using cylindrical blocks instead of cubes. There is little difference between Trial #1 and #2 with respect to outcome. Age doesn't seem to have an effect on time to build, based on the plot.
+
+**4. Produce plots to examine the relationship between the *number* of blocks used to build towers, and the block type, trial number, and age.**
+```{r echo=FALSE}
+ggplot(blocks, aes(x = Shape, y = Number, color = Shape)) +
+  geom_boxplot() +
+  labs( x = "Block Type", y = "Number of Blocks Used to Build Towers",
+        title = "Number of Blocks Used vs Block Type",
+        caption = "This is a graph comparing number of blocks used and block type") +
+  theme(legend.position = "none") +
+  scale_x_discrete(labels = c('Cube', 'Cylinder'))
+
+
+ggplot(blocks, aes(x = Trial, y = Number, color = Trial)) +
+  geom_boxplot() +
+  labs( x = "Trial Number", y = "Number of Blocks Used to Build Towers",
+        title = "Number of Blocks Used vs Trial Number",
+        caption = "This is a graph comparing number of blocks used and trial number") +
+  theme(legend.position = "none") +
+  scale_x_discrete(labels = c('1', '2'))
+
+
+ggplot(blocks, aes(x = Age, y = Number)) +
+  geom_point() +
+  labs( x = "Age", y = "Number of Blocks Used to Build Towers",
+        title = "Number of Blocks Used vs Age",
+        caption = "This is a graph comparing number of blocks used and age") +
+  theme(legend.position = "none") +
+  geom_smooth(method='lm')
+
+```
+
+**5. Summarize the relationship between the four variables in words.**
+
+When considering number of blocks used as the response variable, *block shape*  seems to be an important explanatory variable to predict *time*. Children used less blocks of the cylindrical type than cube. Children were faster and had less variation when using cylindrical blocks compared to cubes. There is little difference between median number of blocks between Trial #1 and #2 with respect to outcome, but it should be noted that there is more variation in Trial #2. Age seems to have a greater effect on number of blocks used: older children use more blocks.
+
+## Question 2.18
+
+In this Problem, we focus on the *time taken to build the towers* (The number of blocks used to build towers is studied in Problem 10.19)
+
+**1. The data were originally examined in Problem 1.9. Using these plots, summarize the possible relationships of the explanatory variables with the time taken. Which assumptions, if any, appear to be violated?**
+
+To summarize the possible relationships of the explanatory variables, we can consider each explanatory variable with respect to the response variable (time to build). Shape type seems to be the most important explanatory variable when considering time to build. Children were fastest and had less variation when using cylindrical blocks instead of cubes. There is little difference between Trial #1 and #2 with respect to outcome. Age doesn't seem to have an effect on time to build, based on the plot.
+
+An assumption that may be violated is constant variance. In the plot of time vs age there is heteroschedastic variance with age indicating different variances across the range of ages. The outliers for this plot and the other plots that consider age and Trial also create issues with variance. For example, when considering the type of block, there is more variance with cubes than cylinders. 
+
+**2. Suppose a model with the systematic component Time ~ Age * Shape was needed to model the data. What would such a systematic component imply about the relationship between the variables?**
+
+If this systematic component was needed for the model, this would imply the relationship between age and time has different intercepts and slopes for cylindrical shapes than cube shapes. The interactino implies the effect of age depends on shape.
+
+**3. Suppose a model with the systematic componenet Time ~ Age * Trial was needed to model the data. What would such a systematic component imply about the relationship between the variables?**
+
+This systematic component would imply that time depends on age *and* trial number. The interaction implies the effect of age depends on the trial number.
+
+**4. Suppose a model with the systematic component Time ~ (Age + Shape) * Trial was needed to model the data. What would such a systematic component imply about the relationship between the variables?**
+
+This systematic component would imply that time to build depends on age *and* shape and that both of these variables depend on trial number.
+
+**5. One hypothesis of interest is whether the time taken to build the tower differs between cubical and cylindrical shaped blocks. Test this hypothesis by fitting a linear regression model.**
+
+```{r echo=FALSE}
+model <- lm(Time ~ Shape, data=blocks)
+anova(model)
+```
+```{r echo=FALSE}
+summary(model)
+```
+Based on this ANOVA table and the summary of the model, the time taken to build the tower does differ between cubical and cylindrical shaped blocks (p = 0.004). Children build 14.45 seconds *faster* with cylindrical blocks than cube blocks.
+
+**6. Another hypothesis of interest is that older children take less time to build the towers than younger children, but the difference would depend on the type of block. Test this hypothesis.**
+
+```{r echo=FALSE}
+# Include the interaction of Age*Shape
+altB <- lm(Time ~ Trial + Age + Shape + Age*Shape, data=blocks)
+anova(altB)
+```
+The interaction between age and shape is not significant. Therefore, we do not have enough information to conclude that the difference in time to build for a child's age is dependent on the type of block.
+
+**7. Find a suitable linear regression model for the time taken to build the towers. Do you think this model is suitable? Explain.**
+
+```{r echo=FALSE}
+# Suitable, checking for outliers. Suitable would work for most observations...
+model <- lm(Time ~ Shape, data=blocks)
+anova(model)
+
+```
+Yes, this model includes the explanatory variable (shape) that predicts time to build. After looking at the plot for shape, this model is most suitable for the model with the exception of a few outliers. Other explanatory variables don't contribute to the model (independently or when considered with other variables).
+
+**8. Interpret your final model**
+
+```{r echo=FALSE}
+summary(model)
+```
+On average, it takes children *14.45 seconds* less to stack cylinders than cubes shaped blocks.
