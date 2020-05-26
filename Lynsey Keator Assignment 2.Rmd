@@ -1,14 +1,17 @@
 ---
-title: "Assignment 2: Chapter 3"
+title: 'Assignment 2: Chapter 3'
 author: "Lynsey Keator"
 date: "May 26, 2020"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
-## 3.16 
-*Children were asked to build towers out of cubical and cylindrical blocks as high as they could, and the number of blocks used and the time taken were recorded. The data and a fuller description are given in Problem 2.18. In that problem, a linear regression model was fitted to model the time to build the towers, based on the initial examination in Problem 1.9.*
+## Question 3.16 
 
-```{r}
+Children were asked to build towers out of cubical and cylindrical blocks as high as they could, and the number of blocks used and the time taken were recorded. The data and a fuller description are given in Problem 2.18. In that problem, a linear regression model was fitted to model the time to build the towers, based on the initial examination in Problem 1.9.
+
+```{r include=FALSE}
 # Load libraries and data
 
 library(tidyverse)
@@ -22,20 +25,34 @@ blocks$Trial <- factor(blocks$Trial,
                        labels=c("1", "2"))
 ```
 
+The explanatory variable (shape) predicts time to build. After looking at the plot for shape, this model is most suitable for the model with the exception of a few outliers. Other explanatory variables don't contribute to the model (independently or when considered with other variables).
+```{r echo=FALSE}
+ggplot(blocks, aes(x = Shape, y = Time, color = Shape)) +
+  geom_boxplot() +
+  labs( x = "Block Type", y = "Time to Build (in sec)",
+        title = "Time to Build vs Block Type",
+        caption = "This is a graph comparing time to build for different block shapes") +
+  theme(legend.position = "none") +
+  scale_x_discrete(labels = c('Cube', 'Cylinder'))
+```
 
 **1. Perform a diagnostic analysis of the linear regression model fitted in Problem 2.18, and show a transformation of the response is necessary.**
 
-```{r}
+This is the ANOVA table for the linear regression model from Problem 2.18. In the steps that follow, I will determine how diagnostics can help create a better model.
+```{r echo=FALSE}
 # Load model from 2.18
 
 model <- lm(Time ~ Shape, data=blocks)
 anova(model)
 ```
 
-```{r}
-# Calculate raw and standardized residuals
+Next, I calculate the raw and standardized residuals.
+```{r echo=FALSE}
 
+#Raw residuals
 resid.raw <- resid(model)
+
+#Standardized residuals
 resid.std <- rstandard(model)
 
 c(Raw =var(resid.raw), Standardized = var(resid.std))
@@ -44,7 +61,7 @@ I see that the standardized residuals are close to 1. This makes sense because t
 
 Next, I will calculate fitted values and look at plots of residuals as function of fitted values:
 
-```{r}
+```{r echo=FALSE}
 fit.values <- fitted(model)
 
 plot(fit.values, resid.raw)
@@ -52,56 +69,163 @@ plot(fit.values, resid.std)
 ```
 
 
+I know that raw residuals will not have equal variances, but standardized residuals should have equal variances. Here we see increasing variance with cube blocks compared to cylinder blocks.
+
 *Check for __independence__ of the responses when possible. This assumption can be hard to check, as this may depend on the method of data collection. However, if the data are collected over time, dependence may be identified by plotting residuals against the previous residual in time. If data are spatial, check for dependence by plot residuals against spatial variables.*
+
+Responses are independent of each other .
 
 *Check for __linearity__ between the responses and all covariates using plots of the residuals against each explanatory variable. Linearity between the response and explanatory variables after adjusting for the effects of the other explanatory variables can also be assessed using partial residual plots.*
 
-```{r}
+In the current example, we are not worried about linearity since the only explanatory variable included in the model is a factor. Nonetheless, here is a plot that shows the standardized residuals as a function of block type.
 
+```{r echo=FALSE}
+# Plot standard residuals against block type
 
-pterms <- predict(model, type = "terms")
-partial.resid <- apply(pterms, 2, function(x) x+resid(model))
-head(partial.resid[, 1])
-```
+ggplot(blocks, aes(x = Shape, y = rstandard(model))) +
+  geom_point() +
+  labs( x = "Block Shape", y = "Standardized Residuals",
+        title = "Block Shape vs Standardized Residuals",
+        caption = "A plot of residuals against block shape to detect deviations from linearity") +
+  theme(legend.position = "none") +
+  geom_smooth(method='lm') +
+  scale_x_discrete(labels = c('Cube', 'Cylinder'))
 
-```{r}
-# Look at partial residual plots. We can obtain these be regressing the response variable on the explanatory variable.
-
-termplot(model,
-         partial.resid = TRUE,
-         terms = "Shape",
-         las = 1)
 ```
 
 *Check for __constant variance__ of the response variable using plots of the residuals against mu hat.*
+To do this, I will consider constant variance in the context of a full model and will plot standardized residuals as a function of predicted or fitted values. 
+
+```{r echo=FALSE}
+ggplot(blocks, aes(x = fitted(model), y = rstandard(model))) +
+  geom_point() +
+  labs( x = "Fitted Values", y = "Standardized Residuals",
+        title = "Standard residuals vs fitted values") +
+  theme(legend.position = "none") +
+  geom_smooth(method='lm') 
+```
+
+
+Consistent with the plot above, we see that variance differs between cubes and cylinders with greater variance in time to build for cube blocks compared to cylinder blocks. I also note here that there are outliers. 
+
+Here is a table of standardized and studentized residuals. The studentized residual takes into account the omission of a residual from the calculation of the variance when we copmute that residual.
+
+```{r echo=FALSE}
+summary(cbind(Standardized = rstandard(model),
+              Studentized = rstudent(model)))
+```
+
+To further identify how influential a particular point is in our regression we can use Cook's distance:
 
 ```{r}
-# To look at constant variance, look at it in the context of a full model. Plot standardized residuals as a functionl of predicted or fitted values.
-
-scatter.smooth(rstandard(model) ~ fitted(model),
-               col = "grey", 
-               las = 1,
-               ylab = "Standardized residuals",
-               xlab = "Fitted values")
+plot(cooks.distance(model), type = "h",
+     main = "Cook's distance",
+     ylab = "D",
+     xlab = "Observation number",
+     las = 1)
 ```
-Plots above show variance differs between cubes and cylinders.
+```{r echo=FALSE}
+inf_obs <- influence.measures(model)
+colSums(inf_obs$is.inf)
+```
 
 *Check for normality of the responses using a __Q-Q plot__.*
 
-```{r}
+```{r echo=FALSE}
+# Create Q-Q plot from fitted model
 qqnorm(rstandard(model),
        las = 1,
        pch = 19)
 
+# Add reference line
 qqline(rstandard(model))
 ```
-This plot suggests heavier tails than expected if the data are normally distributed. 
 
-```{r}
-plot(cooks.distance(model), type = "h")
-plot(rstandard(model) ~ blocks$Shape)
-rowSums(influence.measures(model)$is.inf)
-```
+
+This plot suggests heavier tails than expected if the data are normally distributed. 
 
 
 **2. Fit an appropriate linear regression model to the data after applying the transformation, ensuring a diagnostic analysis.**
+
+Based on the diagnostic analysis above, I can conclude that there is not constant variance. Here are the original scores:
+
+```{r}
+ggplot(blocks, aes(x = fitted(model), y = rstandard(model))) +
+  geom_point() +
+  labs( x = "Fitted Values", y = "Standardized Residuals",
+        title = "Standard residuals vs fitted values") +
+  theme(legend.position = "none") +
+  geom_smooth(method='lm') 
+```
+
+To address this, we climb the rungs of the powers ladder to determine the best transformation.
+
+We begin with the square root transformation:
+```{r echo=FALSE}
+model.sqrt <- lm(sqrt(Time) ~ Shape, data=blocks)
+
+ggplot(blocks, aes(x = fitted(model.sqrt), y = rstandard(model.sqrt))) +
+  geom_point() +
+  labs( x = "Fitted Values", y = "Standardized Residuals",
+        title = "Square root transformation") +
+  theme(legend.position = "none") +
+  geom_smooth(method='lm') 
+
+```
+
+The variance looks better, but I suspect another transformation may result in more constant variance.
+
+Next, I apply a log transformation:
+
+```{r include=FALSE}
+# Apply log transform
+model.log <- lm(log(Time) ~ Shape, data=blocks);
+```
+
+```{r echo=FALSE}
+ggplot(blocks, aes(x = fitted(model.log), y = rstandard(model.log))) +
+  geom_point() +
+  labs( x = "Fitted values", y = "Standardized values",
+        title = "Log transformation") +
+  theme(legend.position = "none") +
+  geom_smooth(method = 'lm')
+
+```
+
+Applying a log transformation improves the constant variance. To be sure this is the optimal transformation, I will try one more rung:
+
+```{r}
+model.inv.sqrt <- lm(1/sqrt(Time) ~ Shape, data=blocks)
+
+ggplot(blocks, aes(x = fitted(model.inv.sqrt), y = rstandard(model.inv.sqrt))) +
+  geom_point() +
+  labs( x = "Fitted values", y = "Standardized residuals",
+        title = "Inverse square root transformation") +
+  theme(legend.position = "none") +
+  geom_smooth(method = 'lm')
+```
+
+
+This shows constant variance with the inverse square root transformation is not much better than the log transformation. In fact, it may be slightly worse. I will stick with the log transformation.
+
+Using the log transformation, I create another Q-Q plot:
+```{r echo=FALSE}
+qqnorm(rstandard(model.log)); qqline(rstandard(model.log))
+```
+
+Here is a plot of Cook's distance for the transformed values.
+```{r echo=FALSE}
+plot(cooks.distance(model.log), type = "h")
+```
+
+Here are the standardized residuals plotted as a function of block shape for the log transformation:
+```{r echo=FALSE}
+ggplot(blocks, aes(x = Shape, y = rstandard(model.log), color = Shape)) +
+  geom_boxplot() +
+  labs( x = "Block Shape", y = "Standardized",
+        title = "Number of Blocks Used vs Trial Number") +
+  theme(legend.position = "none") +
+  scale_x_discrete(labels = c('Cube', 'Cylinder'))
+```
+
+
