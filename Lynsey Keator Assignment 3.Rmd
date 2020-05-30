@@ -1,0 +1,55 @@
+---
+title: "Assignment 3: Chapters 4-6"
+author: "Lynsey Keator"
+date: "June 2, 2020"
+output: html_notebook
+---
+## Question 5.25
+
+* Children were asked to build towers as high as they could out of cubical and cylindrical blocks. The number of blocks used and the time taken were recorded. In this problem, only consider the number of blocks used *y* and the age of the child *x*. *
+
+
+1. Plot the number of blocks used against the age of the child.
+
+```{r include=FALSE}
+# Load libraries and data
+
+library(tidyverse)
+library(GLMsData)
+data(blocks)
+
+# Make trial a factor
+
+blocks$Trial <- factor(blocks$Trial,
+                       levels=c(1,2),
+                       labels=c("1", "2"))
+```
+
+```{r}
+ggplot(blocks, aes(x = Age, y = Number)) +
+  geom_point() +
+  labs( x = "Age", y = "Number of Blocks Used to Build Towers",
+        title = "Number of Blocks Used vs Age",
+        caption = "This is a graph comparing number of blocks used and age") +
+  theme(legend.position = "none") +
+  geom_smooth(method='lm')
+```
+
+
+2. From the plot and an understanding of the data answer the two questions in Section 5.2 (page 211) for these data, and hence propose a GLM for the data.
+
+    - Section 5.2 (pg 211)
+    
+    - 1. What probability distribution is appropriate? 
+    *The answer to this question determines the random component of the model. The choice of probability distribution may be suggested by the response data (for example, proportions of a total suggest a binomial distribution), or knowledge of how the variance changes with the mean.*
+    
+    - 2. How are the explanatory variables related to the mean of the repsonse *mu*? 
+    *The answer to this question suggests the systematic component of the model. GLMs assume a function linking the linear predictor to the mean. GLMS are regression models linear in the parameters.
+
+## Question 6.10
+
+* Children were asked to build towers as high as they could out of cubical and cylindrical blocks. The number of blocks used and the time taken were recorded. In this problem, only consider the number of blocks used (y) and the age of the child (x). In Problem 5.25, a GLM was proposed for these data.*
+
+1. Fit this GLM using R, and write down the fitted model.
+2. Determine the standard error for each regression parameter.
+3. Compute the residual deviance.
