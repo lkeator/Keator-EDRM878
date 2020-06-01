@@ -1,8 +1,10 @@
 ---
-title: "Assignment 3: Chapters 4-6"
+title: 'Assignment 3: Chapters 4-6'
 author: "Lynsey Keator"
-date: "June 2, 2020"
-output: html_notebook
+date: "June 1, 2020"
+output:
+  html_document:
+    df_print: paged
 ---
 ## Question 5.25
 
@@ -25,7 +27,7 @@ blocks$Trial <- factor(blocks$Trial,
                        labels=c("1", "2"))
 ```
 
-```{r}
+```{r echo=FALSE}
 ggplot(blocks, aes(x = Age, y = Number)) +
   geom_point() +
   labs( x = "Age", y = "Number of Blocks Used to Build Towers",
@@ -43,13 +45,42 @@ ggplot(blocks, aes(x = Age, y = Number)) +
     - 1. What probability distribution is appropriate? 
     *The answer to this question determines the random component of the model. The choice of probability distribution may be suggested by the response data (for example, proportions of a total suggest a binomial distribution), or knowledge of how the variance changes with the mean.*
     
+    Responses are counts (i.e. number of blocks).
+    
     - 2. How are the explanatory variables related to the mean of the repsonse *mu*? 
     *The answer to this question suggests the systematic component of the model. GLMs assume a function linking the linear predictor to the mean. GLMS are regression models linear in the parameters.
+    
+    Variance increases with mean.
+    
+Proposed GLM:
+```{r}
+model <- glm(Number ~ Age, data =blocks, family=poisson)
+```
+
+Poisson seems appropriate given we are dealing with discrete data and the data are counts.
 
 ## Question 6.10
 
 * Children were asked to build towers as high as they could out of cubical and cylindrical blocks. The number of blocks used and the time taken were recorded. In this problem, only consider the number of blocks used (y) and the age of the child (x). In Problem 5.25, a GLM was proposed for these data.*
 
-1. Fit this GLM using R, and write down the fitted model.
-2. Determine the standard error for each regression parameter.
-3. Compute the residual deviance.
+**1. Fit this GLM using R, and write down the fitted model.**
+
+```{r echo=TRUE}
+model <- glm(Number ~ Age, data =blocks, family=poisson)
+```
+
+**2. Determine the standard error for each regression parameter.**
+
+Stnadard error for slope = 0.223
+Standard error for age = 0.0534.
+
+**3. Compute the residual deviance.**
+
+Residual deviance = 62.24.
+
+*To complete numbers 2 and 3:*
+
+```{r echo=TRUE}
+model; deviance(model); summary(model)
+```
+
