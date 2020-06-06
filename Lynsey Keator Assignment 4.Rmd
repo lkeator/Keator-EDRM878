@@ -1,0 +1,41 @@
+---
+title: 'Assignment 4: Chapters 7-8'
+author: "Lynsey Keator"
+date: "June 8, 2020"
+output: html_notebook
+---
+
+```{r include=FALSE}
+# Load libraries and data
+
+library(tidyverse)
+library(GLMsData)
+data(blocks)
+
+# Make trial a factor
+
+blocks$Trial <- factor(blocks$Trial,
+                       levels=c(1,2),
+                       labels=c("1", "2"))
+```
+
+## Question 7.4
+
+Children were asked to build towers as high as they could out of cubical and cylindrical blocks. The number of blocks used and the time taken were recorded (data set: blocks). In this problem, only consider the number of blocks used (*y*) and the age of the child (*x*). In Problem 6.10, a GLM was fitted for these data.
+
+```{r echo=TRUE}
+model <- glm(Number ~ Age, data =blocks, family=poisson)
+```
+
+1. Use a Wald test to determine if age seems necessary in the model.
+2. Use a score test to determine if age seems necessary in the model.
+3. Use a likelihood ratio test to determine if age seems necessary in the model.
+4. Compare the results from the Wald, score and likelihood ratio tests. Comment.
+5. Is the saddlepoint approximation expected to be accurate? Explain.
+6. Is the Central Limit Theorem expected to be accurate? Explain.
+7. Find the 95% Wald confidence intervals for the regression coefficients.
+8. Plot the number of blocks used agained age, and show the relationship described by the fitted model. Also, plot the lines indicating the lower and upper 95% confidence intervals for these fitted values.
+
+##Question 8.11
+
+Children were asked to build towers as high as they could out of cubical and cylindrical blocks. The number of blocks used and the time taken were recorded. In this problem, only consider the number of blocks used *y* and the age of the child *x*. In Problem 6.10, a GLM was fitted for these data. Perform a diagnostic analysis, and determine if the model is suitable.
