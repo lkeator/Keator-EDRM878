@@ -2,7 +2,9 @@
 title: 'Assignment 4: Chapters 7-8'
 author: "Lynsey Keator"
 date: "June 8, 2020"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 ```{r include=FALSE}
@@ -10,6 +12,8 @@ output: html_notebook
 
 library(tidyverse)
 library(GLMsData)
+library(statmod)
+library(MASS)
 data(blocks)
 
 # Make trial a factor
@@ -19,23 +23,163 @@ blocks$Trial <- factor(blocks$Trial,
                        labels=c("1", "2"))
 ```
 
+```{r include=FALSE}
+ggplot(blocks, aes(x = Age, y = Number)) +
+  geom_point() +
+  labs( x = "Age", y = "Number of Blocks Used to Build Towers",
+        title = "Number of Blocks Used vs Age",
+        caption = "This is a graph comparing number of blocks used and age") +
+  theme(legend.position = "none") +
+  geom_smooth(method='lm')
+```
+
 ## Question 7.4
 
 Children were asked to build towers as high as they could out of cubical and cylindrical blocks. The number of blocks used and the time taken were recorded (data set: blocks). In this problem, only consider the number of blocks used (*y*) and the age of the child (*x*). In Problem 6.10, a GLM was fitted for these data.
 
+This is the GLM fitted for these data:
 ```{r echo=TRUE}
-model <- glm(Number ~ Age, data =blocks, family=poisson)
+model <- glm(Number ~ Age, data = blocks, family=poisson)
 ```
 
-1. Use a Wald test to determine if age seems necessary in the model.
-2. Use a score test to determine if age seems necessary in the model.
-3. Use a likelihood ratio test to determine if age seems necessary in the model.
-4. Compare the results from the Wald, score and likelihood ratio tests. Comment.
-5. Is the saddlepoint approximation expected to be accurate? Explain.
-6. Is the Central Limit Theorem expected to be accurate? Explain.
-7. Find the 95% Wald confidence intervals for the regression coefficients.
-8. Plot the number of blocks used agained age, and show the relationship described by the fitted model. Also, plot the lines indicating the lower and upper 95% confidence intervals for these fitted values.
+**1. Use a *Wald test* to determine if age seems necessary in the model.**
 
-##Question 8.11
+```{r echo=TRUE}
 
-Children were asked to build towers as high as they could out of cubical and cylindrical blocks. The number of blocks used and the time taken were recorded. In this problem, only consider the number of blocks used *y* and the age of the child *x*. In Problem 6.10, a GLM was fitted for these data. Perform a diagnostic analysis, and determine if the model is suitable.
+Wald <- glm(Number ~ Age,
+             data = blocks,
+             family = poisson)
+
+printCoefmat(coef(summary(Wald)))
+```
+The Wald test suggests age seems necessary in the model.
+
+**2. Use a *score test* to determine if age seems necessary in the model.**
+
+```{r echo=TRUE}
+
+model0 <- update(model, .~1)
+
+z.stat <- glm.scoretest(model0, blocks$Age)
+p.val <- 2 * (1-pt(abs(z.stat), df=df.residual(model)))
+round(c(score.stat= z.stat, P = p.val), 4)
+
+```
+The score test is a test of age, a variable that is not in the model.
+
+**3. Use a likelihood ratio test to determine if age seems necessary in the model.**
+
+```{r}
+anova(model, test = "Chisq")
+```
+
+**4. Compare the results from the Wald, score and likelihood ratio tests. Comment.**
+
+All three tests suggest age is necessary in the model. I know that distributional approximations for likelihood ratio and score tests are typically better than the Wald test, especially for Poisson GLMs when fitted values occur on or near the boundary of the range of possible values.
+
+**5. Is the saddlepoint approximation expected to be accurate? Explain.**
+
+Yes, the saddlpepoint approximation is expected to be accurate. For Poisson GLMs, saddlepoint approximation is accurate when smallest response is greater than or equal to three In the current model, the smallest response is 3, so the saddlepoint is sufficient.
+
+**6. Is the Central Limit Theorem expected to be accurate? Explain.**
+
+No, the CLT is not expected to be accurate. For Poisson GLMs, CLT is accurate when smallest response is greater than or equal to five. In the current model, the smallest response is 3 (and there are multiple counts of 4), so the CLT is insufficient.
+
+**7. Find the 95% Wald confidence intervals for the regression coefficients.**
+
+```{r echo=TRUE}
+
+# Prediction based on eta
+out <- predict(model, 
+               newdata = data.frame(Age = 2.65),
+               se.fit=TRUE)
+
+# Prediction based on mu
+out2 <- predict(model, 
+              newdata = data.frame(Age = 2.65),
+              se.fit=TRUE,
+              type="response")
+
+c(exp(out$fit), out2$fit)
+
+zstar <- qnorm(p = 0.975)
+
+ci.lo <- exp(out$fit - zstar * out$se.fit)
+ci.hi <- exp(out$fit + zstar * out$se.fit)
+
+
+cbind ( Lower=ci.lo, Estimate = exp(out$fit), Upper = ci.hi)
+
+```
+
+
+**8. Plot the number of blocks used agained age, and show the relationship described by the fitted model. Also, plot the lines indicating the lower and upper 95% confidence intervals for these fitted values.**
+
+```{r echo=FALSE}
+
+ggplot(blocks, aes(x = Age, y = Number)) +
+  geom_point() +
+  labs( x = "Age", y = "Number of Blocks Used to Build Towers",
+        title = "Number of Blocks Used vs Age",
+        caption = "This is a graph comparing number of blocks used and age") +
+  theme(legend.position = "none") +
+  geom_smooth(method='glm', se=TRUE, method.args = list(family="poisson"))
+  
+```
+
+## Question 8.11
+
+Children were asked to build towers as high as they could out of cubical and cylindrical blocks. The number of blocks used and the time taken were recorded. In this problem, only consider the number of blocks used *y* and the age of the child *x*. In Problem 6.10, a GLM was fitted for these data. 
+
+**Perform a diagnostic analysis, and determine if the model is suitable.**
+
+*Systematic component*
+
+To perform a diagnostic analysis and determine if the model is suitable, I need to consider residuals. These are the main tool for diagnostic analysis. Quantile residuals are most commonly used for Poisson EDMs.
+
+```{r include=FALSE}
+qr <- qresid(model)
+```
+
+```{r echo=FALSE}
+
+ggplot(blocks, aes(x = sqrt(fitted(model)), y = qresid(model))) +
+  geom_point() +
+  labs( x = " Square Root of the Fitted Values", y = "Quantile Residuals",
+        title = "Quantile Residuals vs Square Root of Fitted Values") +
+  theme(legend.position = "none") +
+  geom_smooth() 
+
+```
+
+*Random component*
+
+In terms of the random component, if the correct EDM is used, residuals should have a normal distribution. I've checked this using a Q-Q plot:
+
+```{r echo=FALSE}
+# If Poisson is the correct EDM, residuals should have a normal distribution. 
+
+ggplot(model, aes(sample=qr)) +
+  stat_qq() +
+   labs( x = "Theoretical Quantiles", 
+         y = "Quantile Residuals",
+        title = "Normal Q-Q")
+
+```
+
+To check for influential observations:
+```{r echo=FALSE}
+colSums(influence.measures(model)$is.inf)
+```
+
+Only one method (cov.r) identifies any influential observation, so we have little to be concerned about. Below is a plot of Cook's Distance Looking at this plot, the highest value is < 0.05 and is not something to be concerned about.
+
+```{r echo=FALSE}
+ 
+# To identify influencial observations:
+ggplot(model, aes(seq_along(.cooksd), .cooksd)) + 
+  geom_bar(stat="identity", position="identity") +
+  labs( x = "Obs. Number", y = "Cook's Distance",
+        title = "Cook's Distance") 
+```
+
