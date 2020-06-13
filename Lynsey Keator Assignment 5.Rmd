@@ -1,0 +1,29 @@
+---
+title: "Assignment 5: Chapters 9 + 10"
+author: "Lynsey Keator"
+date: "June 15, 2020"
+output: html_notebook
+---
+
+## Question 9.7
+
+After the explosion of the space shuttle *Challenger* on January 29, 1986, a study was conducted to determine if previously-collected data about the ambient air temperature at the time of the launch could have been used to foresee potential problems with the launch. In Example 4.2, a model was proposed for these data.
+
+```{r}
+library(tidyverse)
+library(statmod)
+
+data(shuttles)
+
+```
+
+1. Plot the data
+
+2. Fit and interpret the model
+3. Perform a diagnostic analysis
+4. On the day of the *Challenger* launch, the forecast temperature was 31 degrees Farenheit. What is the predicted probabiltiy of an O-ring failure?
+5. What would the ED50 mean in this context? What would be a more sensible ED for this context?
+
+## Question 10.12
+
+In a study of depressed women, women were classified into groups based on their depression level, whether a severe life event had occurred in the last year, and if they had three children under 14 at home. Model these counts using a Poisson GLM, and summarize the data if possible.
