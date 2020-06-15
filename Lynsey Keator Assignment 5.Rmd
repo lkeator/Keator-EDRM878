@@ -1,29 +1,127 @@
 ---
-title: "Assignment 5: Chapters 9 + 10"
+title: 'Assignment 5: Chapters 9 + 10'
 author: "Lynsey Keator"
 date: "June 15, 2020"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 ## Question 9.7
 
-After the explosion of the space shuttle *Challenger* on January 29, 1986, a study was conducted to determine if previously-collected data about the ambient air temperature at the time of the launch could have been used to foresee potential problems with the launch. In Example 4.2, a model was proposed for these data.
+*After the explosion of the space shuttle *Challenger* on January 29, 1986, a study was conducted to determine if previously-collected data about the ambient air temperature at the time of the launch could have been used to foresee potential problems with the launch. In Example 4.2, a model was proposed for these data.*
 
-```{r}
+```{r include=FALSE}
 library(tidyverse)
+library(GLMsData)
 library(statmod)
 
 data(shuttles)
 
 ```
 
-1. Plot the data
+**1. Plot the data**
 
-2. Fit and interpret the model
-3. Perform a diagnostic analysis
-4. On the day of the *Challenger* launch, the forecast temperature was 31 degrees Farenheit. What is the predicted probabiltiy of an O-ring failure?
-5. What would the ED50 mean in this context? What would be a more sensible ED for this context?
+```{r echo=FALSE}
+ggplot(shuttles, aes(x = Temp, y = Damaged/6)) +
+  geom_point() +
+  labs( x = "Temperature", y = "Proportion of Damaged O-Rings",
+        title = "Damaged O-Rings vs Temperature",
+        caption = "This is a graph comparing proportion of damaged O-Rings and Temperature") +
+  theme(legend.position = "none") 
+```
+
+**2. Fit and interpret the model**
+
+```{r echo=TRUE}
+model <- glm(Damaged/6 ~ Temp, weights=rep(6, length(Temp)),
+             family = binomial, data=shuttles)
+
+printCoefmat(coef(summary(model)))
+
+```
+
+```{r echo=FALSE}
+ggplot(shuttles, aes(x = Temp, y = Damaged/6)) +
+  geom_point() +
+  labs( x = "Temperature", y = "Proportion of Damaged O-rings",
+        title = "Damaged O-Rings vs Temperature",
+        caption = "This is a graph comparing number of damaged O-Rings and Temperature") +
+  theme(legend.position = "none") +
+  geom_smooth(method='glm', se=TRUE, method.args = list(family="binomial"))
+```
+
+**3. Perform a diagnostic analysis**
+Here is a plot of quantile residuals vs fitted values:
+```{r echo=FALSE}
+qr <-qresid(model)
+```
+
+```{r}
+scatter.smooth(qr ~ fitted(model),
+               las = 1,
+               main = "Residuals vs fitted",
+               xlab = "Fitted value",
+               ylab = "Quantile residual")
+```
+
+```{r echo=FALSE}
+
+ggplot(model, aes(sample=qr)) +
+  stat_qq() +
+   labs( x = "Theoretical Quantiles", 
+         y = "Quantile Residuals",
+        title = "Normal Q-Q") 
+```
+
+```{r echo=FALSE}
+colSums(influence.measures(model)$is.inf)
+```
+
+**4. On the day of the *Challenger* launch, the forecast temperature was 31 degrees Farenheit. What is the predicted probabiltiy of an O-ring failure?**
+
+```{r echo=FALSE}
+predict(model, newdata = data.frame(Temp=31), type = "response")
+```
+ 
+**5. What would the ED50 mean in this context? What would be a more sensible ED for this context?**
+
+ED50 is the values of covariates when the expected proportion is mu = 0.5 In this example, ED50 is the temperature at which you'd predict a 50% chance O-ring failure. It is best to have as few O-rings fail as possible, so it would be best to use a smaller number.
 
 ## Question 10.12
 
 In a study of depressed women, women were classified into groups based on their depression level, whether a severe life event had occurred in the last year, and if they had three children under 14 at home. Model these counts using a Poisson GLM, and summarize the data if possible.
+
+```{r include=FALSE}
+data(dwomen)
+str(dwomen)
+
+# response variable = number of women with depression
+# explanatory variable = depression, severe life event, children
+```
+8 cells = 8 observationsn = 8 DOF
+
+```{r echo=FALSE}
+Counts <- c(9, 0, 24, 4, 12, 20, 119, 231)
+Depression <- gl(2, 4, 8, labels = c("Yes", "No"))
+SLE <- gl(2, 1, 8, labels = c("Yes", "No"))
+Kids <- gl(2, 2, 8, labels = c("Yes", "No"))
+data.frame(Counts, Depression, SLE, Kids)
+
+```
+
+```{r include=FALSE}
+# Saturated Model
+dep.all <- glm(Counts ~ Depression * SLE * Kids,
+               family = poisson,
+               data=dwomen)
+
+```
+
+Saturated model:
+```{r echo=FALSE}
+anova(dep.all, test = "Chisq")
+```
+
+The interactions between depression and SLE and depression and kids are significant. It seems that the presence of SLEs increase depression and having three kids under 14 at home also increases depression. Therefore, our final mondel needs to include these interactions. The interaction between SLE and kids is not significant nor is the three-way interaction significant.
+
