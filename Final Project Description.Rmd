@@ -1,0 +1,203 @@
+---
+title: "Final Project Description"
+output: html_notebook
+---
+
+The purpose of this project is to create a seminar *review notebook*, with
+examples, that will support you when you begin to analyze your own data with the
+generalized linear model. You will complete the following steps for each of four
+EDMS: normal, binomial, Poisson, and gamma.
+
+1. Summarize some of the major characteristics of the EDM and considerations for
+constructing a generalized linear model and making inferences. For example,
+what is the mean-variance relationship? Is the dispersion known or must it be
+estimated? How should the dispersion be estimated? What are the potential link
+functions and which of these are most useful? What methods of inference can or
+should you use? When does the saddlepoint approximation or Central Limit Theorem
+suggest that inferences will be valid? When will you adjust for overdispersion?
+What type of residual should you use? What diagnostic plots should you study?
+What constant-information scale transformation should you use in these plots?
+What are the primary effect size estimates? (Note: These are examples and not
+an exhaustive list.) Your summary should not be a narrative, but rather should 
+be in the form of an outline, a mind map, or a flowchart.
+
+2. For each EDM, use your summary and the provided data set to exemplify an
+analysis to answer a research question. Your analysis should include graphical
+displays, descriptive statistics, and inference. You should conclude with your
+selected model and an answer to the research question in specific terms. That
+is, rather than stating that effects are "statistically significant" you should
+provide estimates of these effects, with a confidence interval, if possible, 
+and then interpret these effects in practical terms.
+
+3. For each EDM, answer the additional questions or complete the exercises.
+
+Your review notebook should be completed in a single R notebook using R
+markdown. If your summary is in the form of a mind map or flowchart, you may
+either include these in your notebook as an image or supply them in separate
+files that you refer to in your notebook by name or number. Submit your project
+using either your GitHub repo or your Box folder, whichever you have been
+using throughout this seminar. If you are using Box, please make certain that
+your name is included in the name for each file.
+
+This project is open book, open note, and open web. There will also be time for
+questions and discussion in each of our remaining class meetings. You may
+also continue to use the Research Cafe.
+
+Deadline: Friday, June 19, at 11:59 PM.
+
+***
+
+### Normal
+
+The data set is available as the *crawl* data in the GLMsData library.
+
+The data come from a study which hypothesized that babies would take longer to 
+learn to crawl in colder months because the extra clothing restricts their 
+movement. From 1988 to 1991, researchers recorded the babies' first crawling age
+and the average monthly temperature 6 months after birth (when ``infants 
+presumably enter the window of locomotor readiness''). The parents reported the 
+birth month and age when their baby first crept or crawled a distance of four 
+feet in one minute. Data were collected at the University of Denver Infant Study
+Center on 208 boys and 206 girls, and summarized by the birth month.
+
+#### Variables
+
+BirthMonth: the baby's birth month
+
+Age: the mean age (in completed weeks) at which the babies born this month
+started to crawl
+
+SD: the standard deviation (in completed weeks) of the crawling ages for babies
+born this month
+
+SampleSize: the number of babies in the study born in the given month
+
+Temp: the monthly average temperature (in degrees F) six months after the birth
+month
+
+#### Research question
+
+What is the effect of temperature (six months after birth) on the age when
+babies start to crawl?
+
+#### Additional exercise
+
+We learned that the Wald test, the likelihood ratio test, and the score test
+all provide the same result for the normal EDM. Verify that this is the case
+for these data and your model.
+
+***
+
+### Binomial
+
+The data set is available as the *belection* data in the GLMsData library.
+
+The data give the number of male and females candidates in the British general
+election held April 9, 1992.
+
+#### Variables
+
+Region: the region in Britain
+
+Party: the political party
+
+Females: the number of female candidates
+
+Males: the number of male candidates
+
+#### Research question
+
+Assuming that the current political parties and views of British voters are 
+similar now as they were in 1992 (which may not be a reasonable assumption),
+what factors can best be used to predict female participation as a candidate
+in British elections?
+
+#### Additional questions
+
+1. How do you check for overdispersion when modeling proportions?
+
+2. Is there evidence of overdispersion in your chosen model?
+
+3. Whether or not there is evidence of overdispersion in your model, how would
+you change your analysis if you **did** detect overdispersion?
+
+***
+
+### Poisson
+
+The data set is available as the *Sociology Survey Data* in an RData file
+provided via Blackboard.
+
+Graduate students in sociology and other disciplines were randomly selected
+from the graduate student population at one university. They were asked,
+"What is the most important way to reduce crime?"
+
+#### Variables
+
+Response: (1) increase penalties, (2) increase police force, (3) increase
+social services, (4) none of these
+
+Major: (1) sociology, (2) other
+
+Gender: (1) male, (2) female
+
+#### Research questions
+
+How do sociology graduate students differ from other graduate students in their
+perceptions about dealing with crime? Do these perceptions differ based on
+gender?
+
+#### Additional questions
+
+Is there any evidence of Simpson's paradox in these data? How do you know?
+
+***
+
+### Gamma
+
+The data set is available as the *blocks* data in the GLMsData library.
+
+Children were seated at a small table and told to build a tower from the blocks
+as high as they could. This was demonstrated for the child. The time taken and 
+the number of blocks used were recorded. The cubes were always presented first, 
+then cylinders. The second trial was conducted one month later.
+
+The blocks were half inch cubes and cylinders included in Mrs. Hailmann's Beads
+No. 470 of Bradley's Kindergarten Material. Throughout the article, the children
+are referred to using male pronouns, but (in keeping with the custom at the
+time) it is unclear whether all children were males or not. However, since 
+gender is not recorded the children may all have been boys.
+
+The source (Johnson and Courtney, 1931) gives the age in years and months. Here
+they have been converted to decimal years.
+
+#### Variables
+
+Child: a child identifier from A to Y
+
+Number: the number of blocks the child could successfully stack
+
+Time: the time (in seconds) taken for the child to make the stack of blocks
+
+Trial: the trial number on which the data were gathered
+
+Shape: the shape of the blocks being stacked, either cubes or cylinders
+
+Age: the age of the child (in years)
+
+#### Research questions
+
+*Note: We need our observations to be independent and there were two trials*
+*in the study, so only use the first trial when analyzing these data.*
+
+Is the shape of the block and age of the child related to the number of blocks
+that they can put into a tower? Are the effects of age different for the 
+different shapes?
+
+#### Additional exercise
+
+Group ages into three categories and then use the six groupings (three ages
+by two blocks shapes) to study the mean-variance relationship. Show that the
+gamma distribution was a good choice for the random component of the model.
+(To help with your R code, there is a good example of this process on pages 429 
+and 430 in the textbook.)

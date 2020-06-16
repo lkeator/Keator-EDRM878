@@ -1,0 +1,212 @@
+---
+title: "EDRM 878 Final Project"
+author: "Lynsey Keator"
+date: "June 19, 2020"
+output: html_notebook
+---
+
+### **Normal EDM**
+
+## Summarize major characteristics and consideration for constructing a GLM and making inferences.
+
+* Sampling distribution is approximately normal with large samples (central around midpoint)
+
+* Parameters = mean + standard deviation
+
+* Useful for modeling continuous data over the entire real line
+
+* Least squares estimation: randomness is constant
+
+## Mean-variance relationship:
+
+Constant variance $\sigma^2$ around $\mu_i$. Variances are proportional to known, positive weights.
+
+## Is the *dispersion* known or estimated? If estimated, how?
+
+Dispersion parameter = $\sigma^2$
+
+## What are potential *link functions* and which are most useful?
+
+Identity function $\eta$ =  $\mu_i$
+
+## What methods of *inference* can or should be used?
+
+The Wald Test can be used when $\phi$ is known. If $H_0$ is true, this follows the normal distribution.
+
+## When does *Saddplepoint Approximation* or the *Central Limit Theorem* suggest valid inference?
+
+## When do you adjust for *overdispersion*?
+
+* Overdispersion is when variance exceeds $\mu$ (mean $\mu$ has innate variability even when all explanatory variables are fixed), may include events that are positively correlated. Results in explanatory variables being more significant than warranted + CIs narrower than warranted, underestimation of standard error inflates Type I and makes CI too narrow.
+
+## What type of *residual* should be used?
+
+Standard residual should be used because they have equal variances.
+
+## What *plots* should be used?
+
+## What *constant information scale transformation* should be used?
+
+## What are primary *effect size estimates*?
+
+### **Binomial EDM**
+
+## Summarize major characteristics and consideration for constructing a GLM and making inferences.
+
+* Most commonly used of all GLMs (Dunn & Smythe, 2018)
+
+* Response variable = proportion of total (i.e. a proportion of succcess) on a scal of 0 to 1 (inclusive of total counts)
+
+* As proportion approaches boundaries of 0 and 1, variation of repsonse approaches 0
+
+* Variation must be smaller near 0 + 1 than variation of proportions near 0.5. Therefore, variation is not and cannot be constant
+
+* Parameters = sample size + probability
+
+* m (total participants) assumed to be independent
+
+* Each pt is classified into 1 of 2 conditions
+
+## Mean-variance relationship:
+
+var[y] = $\mu(1-\mu)$
+
+## Is the *dispersion* known or estimated? If estimated, how?
+
+$\phi$ = 1/m
+
+## What are potential *link functions* and which are most useful?
+
+* Five link function are accepted but 3 of the most common are:
+  * **Logit**: *most common*, canonical link function
+  * **Probit**
+  * **Complementary log-log**: use when probability it very small or very large (not symmetrical when there is a sudden change)
+  
+* Other two less commonly used link functions are: **cauchit** and **log**.
+
+## What methods of *inference* can or should be used?
+
+* Log link ratio and score tests should be used, making sure $p^1$ is smaller than $\eta$
+
+## When does *Saddplepoint Approximation* or the *Central Limit Theorem* suggest valid inference?
+
+* **Saddlepoint Approximation** is sufficiently accurate when $min(m_1, y_i) \ge 3$ and $min(m_1(1-y_i) \ge 3$
+
+* **CLT** is approximately acurate when $min(m_1, y_i) \ge 5$ and $min(m_1(1-y_i) \ge 5$
+
+## When do you adjust for *overdispersion*? 
+
+* When variation is greater than what is expected under the binomial model (i.e. $\ge \mu(1-\mu)$
+
+* Overdispersion causes estimate of standard error to be underestimated and CIs for parameters to be too narrow
+
+## What type of *residual* should be used?
+
+* Quantile residuals
+
+## What *plots* should be used?
+## What *constant information scale transformation* should be used?
+## What are primary *effect size estimates*?
+
+
+### **Poisson EDM**
+
+## Summarize major characteristics and consideration for constructing a GLM and making inferences.
+
+* Used for count data
+
+* As modelled count approaches 0, variance must approach 0
+
+* Systematic comp = $log_{\mu}$ = $\eta$
+
+## Mean-variance relationship:
+
+* Increased explanatory values, increase variance of response variable
+
+## Is the *dispersion* known or estimated? If estimated, how?
+
+* Known, $\phi$ = 1
+
+## What are potential *link functions* and which are most useful?
+
+* Log vs canonical link function
+
+## What methods of *inference* can or should be used?
+## When does *Saddplepoint Approximation* or the *Central Limit Theorem* suggest valid inference?
+
+* **Saddlepoint Approximation** is sufficiently accurate when $m(y_1) \ge 3$
+
+* **CLT** is approximately accurate when $m(y_1) \ge 5$
+
+## When do you adjust for *overdispersion*? 
+
+
+
+## What type of *residual* should be used?
+
+* Quantile residuals
+
+## What *plots* should be used?
+
+## What *constant information scale transformation* should be used?
+
+* $\sqrt {\hat{\mu}}$
+
+## What are primary *effect size estimates*?
+
+
+
+### **Gamma EDM**
+
+## Summarize major characteristics and consideration for constructing a GLM and making inferences.
+
+* Used when response variable is positive continuous (right skewed)
+
+* As modeled response approaches 0, variation of responses must also approach 0
+
+* Corresponds with ratio data with constant coefficient of variation
+
+* Parameters = shape + rate
+
+* Systematic component = $\mu$ = $\eta$
+
+## Mean-variance relationship:
+
+* Increases mean-variance relationship = v($\mu$) = $\mu^2$
+
+* Mean group variance is approximately proportional to square of the group mean
+
+## Is the *dispersion* known or estimated? If estimated, how?
+
+* Almost always unknown and needs to be estimated
+
+* Use log likelihood ratio based on F test
+
+## What are potential *link functions* and which are most useful?
+
+* Canonical link function = inverse (or reciprocal link = 1/$\mu$) or log
+
+* Log is most common to ensure ($\mu$) > 0
+
+* Inverse or identity function can also be used
+
+* Pearson estimator recommended for mean deviance estimator for gamma when accuracy is in doubt
+
+## What methods of *inference* can or should be used?
+## When does *Saddplepoint Approximation* or the *Central Limit Theorem* suggest valid inference?
+
+* Saddlepoint Approximation is sufficiently accurate when $\phi$ $\le$ 1/3
+
+* CLT when $\phi$ $\le$ 1/5
+
+## When do you adjust for *overdispersion*? 
+
+## What type of *residual* should be used?
+
+## What *plots* should be used?
+
+## What *constant information scale transformation* should be used?
+
+* $log_\hat{\mu}$ (used to spread out fit values)
+
+## What are primary *effect size estimates*?
