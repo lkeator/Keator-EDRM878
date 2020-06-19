@@ -4,187 +4,717 @@ author: "Lynsey Keator"
 date: "June 19, 2020"
 output: html_notebook
 ---
+```{r include=FALSE}
+library(GLMsData)
+library(tidyverse)
+library(statmod)
+library(MASS)
+```
 
-### **Normal EDM**
+To satisfy the requirement for the EDRM878 Final Project I have designed the following notebook. The notebook is outlined as follows:
 
-## Summarize major characteristics and consideration for constructing a GLM and making inferences.
+1. **Normal EDM** 
+  * Outline
+    * Systematic Component
+    * Random Component
+  * Analysis
+
+2. **Binomial EDM**
+  * Outline
+    * Summary
+    * Systematic Component
+    * Random Component
+  * Analysis
+  
+3. **Poisson EDM**
+  * Outline
+    * Summary
+    * Random Component
+    * Systematic Component
+    *Analysis
+  
+4. **Gamma EDM**
+  * Outline 
+    * Summary
+    * Random Component
+    * Systematic Component
+  * Analysis
+
+### **1. Normal EDM**
+
+###### **Summary of characteristics **
 
 * Sampling distribution is approximately normal with large samples (central around midpoint)
 
-* Parameters = mean + standard deviation
+* Parameters = *mean + standard deviation*
 
 * Useful for modeling continuous data over the entire real line
 
 * Least squares estimation: randomness is constant
 
-## Mean-variance relationship:
+##### **Random component**: 
 
-Constant variance $\sigma^2$ around $\mu_i$. Variances are proportional to known, positive weights.
+* Probability distribution is the Normal EDM
 
-## Is the *dispersion* known or estimated? If estimated, how?
+* Useful for modeling continuous data over the entire real line
 
-Dispersion parameter = $\sigma^2$
+###### **Mean-variance relationship:**
 
-## What are potential *link functions* and which are most useful?
+* Constant variance $\sigma^2$ around $\mu_i$. Variances are proportional to known, positive weights.
 
-Identity function $\eta$ =  $\mu_i$
+#### **Systematic component**: 
 
-## What methods of *inference* can or should be used?
+ $\mu = \eta$
 
-The Wald Test can be used when $\phi$ is known. If $H_0$ is true, this follows the normal distribution.
+###### **What are potential *link functions* and which are most useful?**
 
-## When does *Saddplepoint Approximation* or the *Central Limit Theorem* suggest valid inference?
+* Identity function $\eta$ =  $\mu_i$
 
-## When do you adjust for *overdispersion*?
+###### **Is the *dispersion* known or estimated? If estimated, how?**
+
+* Dispersion parameter is unknown
+* Estimated using
+* $\sigma^2$
+
+###### **What methods of *inference* can or should be used?**
+
+* The Wald test, the likelihood ratio test, and the score test (with t distribution) all provide the same result
+
+* The Wald Test can be used when $\phi$ is known. If $H_0$ is true, this follows the normal distribution.
+
+###### **When do you adjust for *overdispersion*?**
 
 * Overdispersion is when variance exceeds $\mu$ (mean $\mu$ has innate variability even when all explanatory variables are fixed), may include events that are positively correlated. Results in explanatory variables being more significant than warranted + CIs narrower than warranted, underestimation of standard error inflates Type I and makes CI too narrow.
 
-## What type of *residual* should be used?
+###### **What type of *residual* should be used?**
 
 Standard residual should be used because they have equal variances.
 
-## What *plots* should be used?
+###### **What *plots* should be used?**
 
-## What *constant information scale transformation* should be used?
+* zero order correlations: response variable plotted against each covariate or partial residuals to adjust for effect of other explanatory variables
 
-## What are primary *effect size estimates*?
+* plots of residuals as function of fitted values to check for variance
+
+* use Cook's Distance plot to check for influential points
+
+* check for normality of residuals using Q-Q plot
+
+* plot standardized residuals as function of explanatory variable after transformation (if applicable)
+
+****
+
+### NORMAL EDM Application
+
+The data set is available as the *crawl* data in the GLMsData library.
+
+```{r include=FALSE}
+
+data(crawl)
+str(crawl)
+
+```
+
+```{r include=FALSE}
+summary(crawl)
+```
+
+The data come from a study which hypothesized that babies would take longer to 
+learn to crawl in colder months because the extra clothing restricts their 
+movement. From 1988 to 1991, researchers recorded the babies' first crawling age
+and the average monthly temperature 6 months after birth (when ``infants 
+presumably enter the window of locomotor readiness''). The parents reported the 
+birth month and age when their baby first crept or crawled a distance of four 
+feet in one minute. Data were collected at the University of Denver Infant Study
+Center on 208 boys and 206 girls, and summarized by the birth month.
+
+#### Variables
+
+  * *BirthMonth*: the baby's birth month
+
+  * *Age*: the mean age (in completed weeks) at which the babies born this month started to crawl
+
+  * *SD*: the standard deviation (in completed weeks) of the crawling ages for babies born this month
+
+  * *SampleSize*: the number of babies in the study born in the given month
+
+  * *Temp*: the monthly average temperature (in degrees F) six months after the birth month
+
+#### Research question: **What is the effect of temperature (six months after birth) on the age when babies start to crawl?**
+
+```{r echo=TRUE}
+# Because each row represents more than one individual, we need to greater a weighted model and ordinary regression model.
+
+crawl.wtd <- glm(Age ~ Temp,
+                data = crawl,
+                weights = SampleSize)
+
+coef(crawl.wtd)
+
+
+```
+
+This means that if we set temperature (explanatory variable) to 0, the value of age ( response variable) is 35.70 weeks. The temperature coefficient is the slope of our regression line. This tells us that for every degree increase, children start crawling 0.08 weeks earlier.
+
+```{r echo=TRUE}
+predict(crawl.wtd)
+fit_values <- predict(crawl.wtd, se.fit = TRUE)
+fit_values$se.fit
+```
+
+```{r echo=TRUE}
+
+#Raw residuals
+resid.raw <- resid(crawl.wtd)
+
+#Standardized residuals
+resid.std <- rstandard(crawl.wtd)
+
+c(Raw =var(resid.raw), Standardized = var(resid.std))
+
+```
+
+```{r echo=FALSE}
+ggplot(crawl, aes(x = fitted(crawl.wtd), y = rstandard(crawl.wtd))) +
+  geom_point() +
+  labs( x = "Fitted Values", y = "Standardized Residuals",
+        title = "Standard residuals vs fitted values") +
+  theme(legend.position = "none") +
+  geom_smooth(method='loess') 
+```
+
+```{r echo=FALSE}
+ggplot(crawl.wtd, aes(sample=resid.std)) +
+  stat_qq() +
+   labs( x = "Theoretical Quantiles", 
+         y = "Standard Residuals",
+        title = "Normal Q-Q") +
+  stat_qq_line()
+```
+
+```{r}
+ggplot(crawl, aes(x = Temp, y = Age)) +
+  geom_point() +
+  labs( x = "Temperature (degrees F)", y = "Age (in weeks)",
+        title = "The effect of temperature on age (in weeks) when babies start to crawl",
+        caption = "This is a graph comparing monthly average tempterature (degrees F) six months after the birth month to the mean age at which babies start to crawl") +
+  theme(legend.position = "none") +
+  geom_smooth(method='glm', se=TRUE, method.args = list(family="gaussian"))
+```
+
+#### Additional exercise
+
+We learned that the Wald test, the likelihood ratio test, and the score test
+all provide the same result for the normal EDM. Verify that this is the case
+for these data and your model.
+
+The Wald Test:
+```{r echo=FALSE}
+# Wald Test
+
+summary(crawl.wtd)
+confint(crawl.wtd)
+```
+
+With 95% confidence, I can report that children start crawling 0.13 - 0.20 weeks earlier for every degree increase in temperature.
+
+The Likelihood Ratio Test:
+```{r echo=FALSE}
+# Likelihood Ratio Test
+anova(crawl.wtd, test = "F")
+```
+
+The Score Test:
+```{r echo=FALSE}
+# Score Test
+anova(crawl.wtd, test = "Rao")
+
+Rao_results <- anova(crawl.wtd, test = "Rao")
+
+z_prob <- Rao_results$`Pr(>Chi)`[2] / 2
+t <- qnorm(z_prob)
+2 * pt(t, Rao_results$`Resid. Df`[2])
+```
+
+****
 
 ### **Binomial EDM**
 
-## Summarize major characteristics and consideration for constructing a GLM and making inferences.
+###### **Summary of characteristics **
 
 * Most commonly used of all GLMs (Dunn & Smythe, 2018)
 
-* Response variable = proportion of total (i.e. a proportion of succcess) on a scal of 0 to 1 (inclusive of total counts)
+* Response variable = proportion $y_i$ of a number of observations $m_i$ that reflect a binary outcome. Total number of observations = $n = \Sigma m_i$
 
 * As proportion approaches boundaries of 0 and 1, variation of repsonse approaches 0
 
 * Variation must be smaller near 0 + 1 than variation of proportions near 0.5. Therefore, variation is not and cannot be constant
 
-* Parameters = sample size + probability
+* Parameters = sample size $n$ + probability $\pi$
 
 * m (total participants) assumed to be independent
 
 * Each pt is classified into 1 of 2 conditions
 
-## Mean-variance relationship:
+##### **Random component**: 
+$ym \sim Bin(\mu, m)$
 
-var[y] = $\mu(1-\mu)$
+###### **Mean-variance relationship:**
 
-## Is the *dispersion* known or estimated? If estimated, how?
+* var[y] = $\mu(1-\mu)$
 
-$\phi$ = 1/m
+##### **Systematic component**: 
+$log (\mu/(1-\mu) = B_0 + B_1x$
 
-## What are potential *link functions* and which are most useful?
+$log (\mu/(1-\mu) = \eta$
+
+###### **What are potential *link functions* and which are most useful?**
 
 * Five link function are accepted but 3 of the most common are:
   * **Logit**: *most common*, canonical link function
-  * **Probit**
-  * **Complementary log-log**: use when probability it very small or very large (not symmetrical when there is a sudden change)
+    * log of the odds, odds = $\mu/(1-\mu)$
+  * **Probit**: inverse of the normal cumulative density function
+  * **Complementary log-log**: $log[-log(1-\mu)]$, use when probability it very small or very large (not symmetrical when there is a sudden change)
   
 * Other two less commonly used link functions are: **cauchit** and **log**.
 
-## What methods of *inference* can or should be used?
+###### **Is the *dispersion* known or estimated? If estimated, how?**
 
-* Log link ratio and score tests should be used, making sure $p^1$ is smaller than $\eta$
+* Known: $\phi$ = 1/m
 
-## When does *Saddplepoint Approximation* or the *Central Limit Theorem* suggest valid inference?
+###### **What methods of *inference* can or should be used?**
+
+* Likelihood Ratio and Score tests should be used, making sure $p^1$ is smaller than $\eta$
+  * Wald Test has undesirable statistical properties with binomial distribution (Hauck-Donner effect)
+
+###### **When does *Saddplepoint Approximation* or the *Central Limit Theorem* suggest valid inference?**
 
 * **Saddlepoint Approximation** is sufficiently accurate when $min(m_1, y_i) \ge 3$ and $min(m_1(1-y_i) \ge 3$
 
 * **CLT** is approximately acurate when $min(m_1, y_i) \ge 5$ and $min(m_1(1-y_i) \ge 5$
 
-## When do you adjust for *overdispersion*? 
+###### **When do you adjust for *overdispersion*?**
 
 * When variation is greater than what is expected under the binomial model (i.e. $\ge \mu(1-\mu)$
 
 * Overdispersion causes estimate of standard error to be underestimated and CIs for parameters to be too narrow
 
-## What type of *residual* should be used?
+###### **What type of *residual* should be used?**
 
 * Quantile residuals
 
-## What *plots* should be used?
-## What *constant information scale transformation* should be used?
-## What are primary *effect size estimates*?
+###### **What *plots* should be used?**
+* To check systematic component:
+  * Plot residuals against fitted values (use quantile residuals)
+  
+* Plot working responses to examine the link function
 
+* To check the random component:
+
+  * Q-Q plots to determine if choice of distribution is appropriate
+
+* Cook's Distance to check for influential outliers
+
+###### **What are primary *effect size estimates*?**
+
+* The Odds Ratio: increase in odds of passing when switching from the control to tx condition
+
+###### **What *constant-information scale transformation* should be used?**
+
+$sin^-1 \sqrt(\hat{mu})$ 
+
+
+
+****
+### BINOMIAL EDM Application
+
+The data set is available as the *belection* data in the GLMsData library.
+
+#### Variables:
+
+This data is composed of two explanatory variables:
+
+  * *Region*: the region in Britain (Southeast, Southwest, Great London, East Anglia, East Midlands, Wales, Scotland, West Midlands, Yorks and Humbers, Northwest, North)
+
+  * *Party*: the political party (Cons, Labour, Lib-Dem, Greens, Other)
+
+Respose variable:
+  * *Outcome*: female candidate (Bernoulli event)
+
+```{r include=FALSE}
+data("belection")
+
+# Add column of total candidates
+belection$total <- belection$Females + belection$Males
+
+belection <- as.data.frame(belection)
+str(belection)
+```
+
+The data give the number of male and females candidates in the British general
+election held April 9, 1992.
+
+#### Research question: **Assuming that the current political parties and views of British voters are similar now as they were in 1992 (which may not be a reasonable assumption), what factors can best be used to predict female participation as a candidate in British elections? **
+
+Party can be used to predict female participation as a candidate in British elections. 
+
+```{r include=FALSE}
+outcome <- (belection$Females/belection$total)
+```
+
+
+```{r echo=FALSE}
+# Here's a visual display to help us understand if the Party membership makes a difference.
+
+ggplot(belection, aes(x = Party, y = outcome, color = Party)) +
+  geom_boxplot() +
+  labs( x = "Party", y = "Outcome",
+        title = "Party vs Female Participation",
+        caption = "This is a graph displaying the relationship between party membership and female participation as a candidate in British elections") +
+  theme(legend.position = "none") +
+  scale_x_discrete(labels = c('Cons', 'Green', 'Labour', 'LibDem', 'Other'))
+```
+
+
+```{r}
+ggplot(belection, aes(x = Region, y = outcome, color = Region)) +
+  geom_boxplot() +
+  labs( x = "Region", y = "Outcome",
+        title = "Region vs Female Participation",
+        caption = "This is a graph displaying the relationship between region and female participation as a candidate in British elections") +
+  theme(legend.position = "none") +
+  scale_x_discrete(labels = c('East Midlands', 'Greater London', 'North West', 'Scotland', 'South East', 'South West', 'Wales', 'W Midlands', 'YorksHumbers'))
+```
+
+Here's a model using the binomial EDM and logit link function:
+```{r echo=TRUE}
+# Model, entering the variables in a different order gives the same results
+
+belection.model <- glm(outcome ~ Party + Region,
+                       family = binomial(logit),
+                       data = belection,
+                       weights = total)
+
+printCoefmat(coef(summary(belection.model)))
+
+```
+
+Effect sizes:
+```{r echo=FALSE}
+# Effect sizes
+exp(coef(belection.model))
+```
+
+Likelihood Ratio Test:
+```{r echo=FALSE}
+anova(belection.model, test ="Chisq")
+```
+
+#### Additional questions
+
+**1. How do you check for overdispersion when modeling proportions?**
+
+For proportion, $y_i$, variance is $\sigma_{y_i}^2 = \mu(1 - \mu)/m_i$. When the variance of
+the second form exceeds this value, there is overdispersion.
+
+To handle overdispersion, allow for $\phi \ge 1$. When we do this, we
+are no longer using a binomial EDM and rely on quasi-likelihood theory to  obtain correct estimators. Therefore, instead of using $\phi = 1$ we  use $\hat\phi$, an estimate of $\phi$ , and proceed with
+a quasi-binomial model. Pearson's estimator is typically used.
+
+To look for overdispersion we compare residual deviance and the Pearson goodness-of-fit statistic to the residual degrees of freedom. Substantial differences suggest overdispersion.
+
+```{r echo=FALSE}
+
+tr.logit <- glm(Females/total ~ Region + Party,
+                data = belection,
+                family = binomial, 
+                weights = total)
+
+c(Df = df.residual(tr.logit),
+  Resid.dev = deviance(tr.logit),
+  Pearson.X2 = sum(resid(tr.logit, type = "pearson")^2))
+```
+
+```{r echo=FALSE}
+coef(tr.logit)
+```
+
+```{r echo=FALSE}
+exp(coef(tr.logit)[11])
+exp(coef(tr.logit)[12])
+exp(coef(tr.logit)[13])
+exp(coef(tr.logit)[14])
+
+```
+This tells us that Green party membership will increase the odds of a female candidate by 3.0485 times compared to the Conservative party. Similarly, membership to the three remaining parties have similar, increased odds compared to the Conservative party: Labour party increases odds by 2.52 times, LibDem 2.785 times and Other 2.479 times.
+
+**2. Is there evidence of overdispersion in your chosen model?**
+
+No, the goodness-of-fit statistic, residual deviance and Pearson's $X^2$ are not substantially different and therefore, we conclude they are likely independent.
+
+**3. Whether or not there is evidence of overdispersion in your model, how would
+you change your analysis if you *did* detect overdispersion?**
+
+If I detected overdispersion, I would first look for outliers. I would do this with a Q-Q pot with quantile residuals and a plot fo quantile residual vs fitted values. Another option would be to look at proprotions and determine if there are any near the boundary of 0 and 1. If there is dispersion and the previously named methods do not reveal dispersion, an alternative method would be to use the quasi-binomial which relies on F tests rather than $\chi^2$. We use an estimate for standard error, rather than known standard error.
+
+****
 
 ### **Poisson EDM**
 
-## Summarize major characteristics and consideration for constructing a GLM and making inferences.
+###### **Summary of major characteristics **
 
 * Used for count data
 
+* When counts are independent, when any number of events can occur and when upper limit is greater than actual count, Poisson will perform better than binomial
+
 * As modelled count approaches 0, variance must approach 0
 
-* Systematic comp = $log_{\mu}$ = $\eta$
+* Residual deviance = $\chi_{n-p'}^2$
 
-## Mean-variance relationship:
+* Three primary uses: 1) Poisson regression (explanatory variables are covariates), 2) When studying rates that are relatively small, 3) When counts can be put into a contingency table (log-linear model)
+
+* If explanatory variables are all quantitative, use Poisson regression model. When all explanatory variables are qualitative, fitted Poisson (log-linear model)
+
+#### Random Component:
+
+$y \sim Pois(\mu)$
+
+###### **Mean-variance relationship:**
 
 * Increased explanatory values, increase variance of response variable
 
-## Is the *dispersion* known or estimated? If estimated, how?
+* Variance function = $\mu$
 
-* Known, $\phi$ = 1
+#### Systematic Component:
+$log_\mu = B_0 + B_1x$
 
-## What are potential *link functions* and which are most useful?
+$log_{\mu} = \eta$
 
-* Log vs canonical link function
+###### **Is the *dispersion* known or estimated? If estimated, how?**
 
-## What methods of *inference* can or should be used?
-## When does *Saddplepoint Approximation* or the *Central Limit Theorem* suggest valid inference?
+* Known: $\phi$ = 1
+
+###### **What are potential *link functions* and which are most useful?**
+
+* Log link function
+
+###### **What methods of *inference* can or should be used?**
+###### **When does *Saddplepoint Approximation* or the *Central Limit Theorem* suggest valid inference?**
 
 * **Saddlepoint Approximation** is sufficiently accurate when $m(y_1) \ge 3$
 
 * **CLT** is approximately accurate when $m(y_1) \ge 5$
 
-## When do you adjust for *overdispersion*? 
-
-
-
-## What type of *residual* should be used?
+###### **What type of *residual* should be used?**
 
 * Quantile residuals
 
-## What *plots* should be used?
+###### **What *plots* should be used?**
 
-## What *constant information scale transformation* should be used?
+* To check systematic component:
+  * Plot residuals against fitted values (use quantile residuals)
+  
+* Plot working responses to examine the link function
 
-* $\sqrt {\hat{\mu}}$
+* To check the random component:
 
-## What are primary *effect size estimates*?
+  * Q-Q plots to determine if choice of distribution is appropriate
+
+* Cook's Distance to check for influential outliers
+
+###### **What *constant-information scale transformation* should be used?**
+
+* Square root: $\sqrt {\hat{\mu}}$
+
+****
+
+### POISSON EDM Application
+
+```{r echo=FALSE}
+
+# Set up table with column of frequencies
+
+load("Sociology Survey Data.RData")
+
+survey <- as.data.frame(soc_survey)
+
+countdf <- as.data.frame(table(survey))
+
+names(countdf) <- c("Response", "Major", "Gender", "Counts")
+
+countdf
+```
+
+The data set is available as the *Sociology Survey Data* in an RData file
+provided via Blackboard.
+
+Graduate students in sociology and other disciplines were randomly selected
+from the graduate student population at one university. They were asked,
+"What is the most important way to reduce crime?"
+
+#### Variables
+
+  * *Response*: (1) increase penalties, (2) increase police force, (3) increase
+social services, (4) none of these
+
+  * *Major*: (1) sociology, (2) other
+
+  * *Gender*: (1) male, (2) female
+
+```{r echo=FALSE}
+ggplot(countdf, aes(x = Response, y = Counts, color = Response)) +
+  geom_boxplot() +
+  labs( x = "Response to Dealing with Crime", y = "Counts",
+        title = "Counts for Responses to Dealing with Crime",
+        caption = "This is a graph comparing number of responses for dealing with crime") +
+  theme(legend.position = "none") +
+  scale_x_discrete(labels = c('Increase Penalties', 'Increase Police Force', 'Increase Social Workers', 'None'))
+```
 
 
+```{r echo=FALSE}
+ggplot(countdf, aes(x = Response, y = Counts, color = Major)) +
+  geom_boxplot() +
+  labs( x = "Response to Dealing with Crime", y = "Counts",
+        title = "Counts for Responses to Dealing with Crime by Major",
+        caption = "This is a graph comparing number of responses for dealing with crime by Major") +
+  theme(legend.position = "right") +
+  scale_color_manual(labels = c("Sociology", "Other"), values = c("black", "grey")) +
+  scale_x_discrete(labels = c('Increase Penalties', 'Increase Police Force', 'Increase Social Workers', 'None'))
+```
+
+```{r echo=FALSE}
+ggplot(countdf, aes(x = Response, y = Counts, color = Gender)) +
+  geom_boxplot() +
+  labs( x = "Response to Dealing with Crime", y = "Counts",
+        title = "Counts for Responses to Dealing with Crime by Gender",
+        caption = "This is a graph comparing number of responses for dealing with crime by Gender") +
+  theme(legend.position = "right") +
+    scale_color_manual(labels = c("Male", "Female"), values = c("blue", "purple")) +
+  scale_x_discrete(labels = c('Increase Penalties', 'Increase Police Force', 'Increase Social Workers', 'None'))
+```
+
+#### Research questions
+
+How do sociology graduate students differ from other graduate students in their
+perceptions about dealing with crime? Do these perceptions differ based on
+gender?
+
+Here is a model using the Poisson EDM and log link function:
+```{r echo=FALSE}
+dep.all <- glm(Counts ~ Response * Major * Gender,
+               family = poisson,
+               data=countdf)
+
+anova(dep.all, test = "Chisq")
+
+```
+Response differs based on major but the three-way interaction does not seem to be important.
+
+Let's look at the proportions separately.
+
+```{r echo=FALSE}
+#Run proportions
+
+Sociology <- subset(countdf, Major == "1")
+Other <- subset(countdf, Major == "2")
+
+table.S <- prop.table(xtabs(Counts ~ Gender + Response, data = Sociology), 1)
+table.O <- prop.table(xtabs(Counts ~ Gender + Response, data = Other), 1)
+
+round(table.S * 100)
+
+round(table.O * 100)
+
+```      
+
+```{r echo=FALSE}
+
+Male <- subset(countdf, Gender == "1")
+Female <- subset(countdf, Gender == "2")
+
+table.M <- prop.table(xtabs(Counts ~ Major + Response, data = Male), 1)
+table.F <- prop.table(xtabs(Counts ~ Major + Response, data = Female), 1)
+
+round(table.M * 100)
+
+round(table.F * 100)
+
+
+```
+Here is a new model including response and major only:
+```{r echo=FALSE}
+surv.mod <- glm(Counts ~ Response * Major,
+               family = poisson,
+               data=countdf)
+
+anova(surv.mod, test = "Chisq")
+```
+
+Coefficients:
+```{r echo=FALSE}
+coef(surv.mod)
+```
+
+Effect sizes:
+```{r echo=FALSE}
+exp(coef(surv.mod))
+```
+This tells me that the count of those who are believe there should be increased police force (response #2) to fight crime is 8 times what it is for those who think there should be increased penalties (Response #1). The count for increased social workers (Response #3) or no response (Response #4) are 35 times the count for those who think there should be increased penalities. 
+
+The count of students who are not sociology majors and voted to increase police force (Response #2) is .23 times the count of sociology majors. Differences in responses across majors had smaller effect sizes.
+
+#### Additional questions
+
+**Is there any evidence of Simpson's paradox in these data? How do you know?**
+
+No evidence of Simpson's paradox because there is no conditional independence, i.e. lurking variable. The relationship exists without stratification by gender.
+
+***
 
 ### **Gamma EDM**
 
-## Summarize major characteristics and consideration for constructing a GLM and making inferences.
+##### **Summary of major characteristics**
 
 * Used when response variable is positive continuous (right skewed)
 
 * As modeled response approaches 0, variation of responses must also approach 0
 
-* Corresponds with ratio data with constant coefficient of variation
+* Corresponds with ratio data with constant coefficient of variation ( $\phi\mu^2/\mu$ or $\phi\mu$, which is a constant)
 
 * Parameters = shape + rate
 
 * Systematic component = $\mu$ = $\eta$
 
-## Mean-variance relationship:
+##### Random Component:
 
-* Increases mean-variance relationship = v($\mu$) = $\mu^2$
+$ y \sim Gamma(\mu, \phi) $
+
+###### **Mean-variance relationship:**
+
+* Increasing mean-variance relationship = v($\mu$) = $\mu^2$
 
 * Mean group variance is approximately proportional to square of the group mean
 
-## Is the *dispersion* known or estimated? If estimated, how?
+#### Systematic Component:
+
+$\mu = B_0 + B_1x$
+
+$ \mu = \eta$
+
+###### **Is the *dispersion* known or estimated? If estimated, how?**
 
 * Almost always unknown and needs to be estimated
 
-* Use log likelihood ratio based on F test
+* Use log likelihood ratio based on $F$ test
 
-## What are potential *link functions* and which are most useful?
+* 2 exceptions: 1) if $y$ is normally distributed, vriances can be modeled with $\chi^2$ distribution which is a special case of a gamma distribution for which dispersion parameter for gamma is known to be $\phi = 2$ or 2) if $y$ follows an exponential distribution, then dispersion parameters is $\phi = 1$. 
 
-* Canonical link function = inverse (or reciprocal link = 1/$\mu$) or log
+* Pearson estimator
+
+###### **What are potential *link functions* and which are most useful?**
+
+* Canonical link function = inverse (or reciprocal link = 1/$\mu$)
 
 * Log is most common to ensure ($\mu$) > 0
 
@@ -192,21 +722,290 @@ $\phi$ = 1/m
 
 * Pearson estimator recommended for mean deviance estimator for gamma when accuracy is in doubt
 
-## What methods of *inference* can or should be used?
-## When does *Saddplepoint Approximation* or the *Central Limit Theorem* suggest valid inference?
+###### **When does *Saddplepoint Approximation* or the *Central Limit Theorem* suggest valid inference?**
 
 * Saddlepoint Approximation is sufficiently accurate when $\phi$ $\le$ 1/3
 
 * CLT when $\phi$ $\le$ 1/5
 
-## When do you adjust for *overdispersion*? 
+###### **What type of *residual* should be used?**
 
-## What type of *residual* should be used?
+* To check systematic component:
+  * Plot residuals against fitted values (use quantile residuals)
+  
+* Plot working responses to examine the link function
 
-## What *plots* should be used?
+* To check the random component:
 
-## What *constant information scale transformation* should be used?
+  * Q-Q plots to determine if choice of distribution is appropriate
+
+* Cook's Distance to check for influential outliers
+
+###### **What *constant information scale transformation* should be used?**
 
 * $log_\hat{\mu}$ (used to spread out fit values)
 
-## What are primary *effect size estimates*?
+### GAMMA EDM Application
+
+The data set is available as the *blocks* data in the GLMsData library.
+
+Children were seated at a small table and told to build a tower from the blocks
+as high as they could. This was demonstrated for the child. The time taken and 
+the number of blocks used were recorded. The cubes were always presented first, 
+then cylinders. The second trial was conducted one month later.
+
+The blocks were half inch cubes and cylinders included in Mrs. Hailmann's Beads
+No. 470 of Bradley's Kindergarten Material. Throughout the article, the children
+are referred to using male pronouns, but (in keeping with the custom at the
+time) it is unclear whether all children were males or not. However, since 
+gender is not recorded the children may all have been boys.
+
+The source (Johnson and Courtney, 1931) gives the age in years and months. Here
+they have been converted to decimal years.
+
+#### Variables
+
+Child: a child identifier from A to Y
+
+Number: the number of blocks the child could successfully stack
+
+Time: the time (in seconds) taken for the child to make the stack of blocks
+
+Trial: the trial number on which the data were gathered
+
+Shape: the shape of the blocks being stacked, either cubes or cylinders
+
+Age: the age of the child (in years)
+
+```{r include=FALSE}
+data(blocks)
+str(blocks)
+```
+
+```{r echo=FALSE}
+ggplot(data=blocks, aes(blocks$Time)) +
+  labs(x = "Time (in seconds)", 
+            title = "A Histogram of Time to Build Block Towers") +
+  geom_histogram() 
+
+```
+The distribution is what we would expect for a measurement that beings at zero. The distribution is R skewed and therefore, we will apply a gamma EDM.
+
+I began by looking at zero order correlations:
+```{r echo=FALSE}
+ggplot(blocks, aes(x = Age, y = Number)) +
+  geom_point() +
+  labs( x = "Age of the Child (years)", y = "Number of Blocks in Tower",
+        title = "Age vs Number of Blocks",
+        caption = "This is a graph comparing number of blocks and age") +
+  theme(legend.position = "none") 
+```
+I've noted increasing variance of block number with increasing age.
+
+```{r echo=FALSE}
+
+ggplot(blocks, aes(x = Shape, y = Number, color = Shape)) +
+  geom_boxplot() +
+  labs( x = "Block Shape", y = "Number of Blocks in Tower",
+        title = "Number of Blocks Used vs Block Shape",
+        caption = "This is a graph comparing number of blocks and shape") +
+  theme(legend.position = "none") +
+  scale_x_discrete(labels = c('Cube', 'Cylinder'))
+
+```
+Children build higher towers with cube blocks than cylindrical blocks. There is also a greater variation in the number of blocks used with cubes.
+
+```{r echo=FALSE}
+ggplot(blocks, aes(x = Shape, y = Age, color = Shape)) +
+  geom_boxplot() +
+  labs( x = "Block Shape", y = "Age",
+        title = "Age vs Block Shape",
+        caption = "This is a graph comparing age and block shape") +
+  theme(legend.position = "none") +
+  scale_x_discrete(labels = c('Cube', 'Cylinder'))
+
+```
+There doesn't seem to be much of a relationship between age and type of block used.
+
+```{r echo=FALSE}
+ggplot(blocks, aes(x = Age, y = Number, color = Shape)) +
+  geom_point() +
+  labs( x = "Age of the Child (years)", y = "Number of Blocks in Tower",
+        title = "Age vs Number of Blocks",
+        caption = "This is a graph comparing number of blocks and age") +
+  theme(legend.position = "right") 
+
+```
+
+#### Research questions
+
+*Note: We need our observations to be independent and there were two trials*
+*in the study, so only use the first trial when analyzing these data.*
+
+**Is the shape of the block and age of the child related to the number of blocks that they can put into a tower? Are the effects of age different for the different shapes?**
+
+The shape of the block and age of the child are related to the number of blocks they can build in a tower. Older children build higher towers than younger children. Children use a greater number of blocks in their tower when using cubical blocks compared to cylindrical blocks. There is however, no interaction between age and shape. 
+
+Here is a model for the data using the Gamma EDM and the log link function:
+```{r echo=TRUE}
+
+blocks.int <- glm(Number ~ Age * Shape, 
+                  family = Gamma(link="log"),
+                  data=blocks)
+
+round(anova(blocks.int, test="F"), 2)
+
+# The interaction is not significant so we re-build the model with variables separately.
+
+blocks.glm <- glm(Number ~ Shape + Age, 
+                  family = Gamma(link="log"),
+                  data=blocks)
+
+round(anova(blocks.glm, test = "F"), 2)
+
+# The fitted model is:
+
+printCoefmat(coef(summary(blocks.glm)), 2)
+```
+
+```{r echo=FALSE}
+ggplot(blocks, aes(x = Age, y = Number, color = Shape)) +
+  geom_point() +
+  labs( x = "Age of the Child (years)", y = "Number of Blocks in Tower",
+        title = "Age vs Number of Blocks",
+        caption = "This is a graph comparing number of blocks and age") +
+  theme(legend.position = "right") +
+  geom_smooth(method='glm', se=TRUE, method.args = c(family= Gamma))
+
+```
+
+We use standardized residuals due to the continuous data. In addition to 
+being the link function, log is also the constant-information scale
+transformation for our explanatory variable and it is in that context that we
+use it here.
+```{r echo=FALSE}
+
+ggplot(blocks.glm, aes(x = log(fitted(blocks.glm)), y = rstandard(blocks.glm))) +
+  geom_point() +
+  labs( x = "Fitted Values", y = "Standardized Residuals",
+        title = "Standard residuals vs fitted values") +
+  theme(legend.position = "none") +
+  geom_smooth()
+```
+
+```{r echo=FALSE}
+
+ggplot(blocks, aes(x = Shape, y = rstandard(blocks.glm), color = Shape)) +
+  geom_boxplot() +
+  labs( x = "Block Shape", y = "Standardized Residuals",
+        title = "Standardized Residuals vs Block Shape",
+        caption = "This is a graph comparing block shape and Standardized Residuals") +
+  theme(legend.position = "none") +
+  scale_x_discrete(labels = c('Cube', 'Cylinder'))
+
+```
+
+A Q-Q plot:
+```{r echo=FALSE}
+qr <- qresid(blocks.glm)
+
+ggplot(blocks.glm, aes(sample=qr)) +
+  stat_qq() +
+   labs( x = "Theoretical Quantiles", 
+         y = "Quantile Residuals",
+        title = "Normal Q-Q") +
+  stat_qq_line()
+```
+```{r echo=FALSE}
+plot(cooks.distance(blocks.glm), type ="h", las=1, ylab="Cooks distance, D")
+```
+```{r echo=FALSE}
+
+colSums(influence.measures(blocks.glm)$is.inf)["cook.d"]
+
+```
+
+```{r echo=FALSE}
+phi.md <- deviance(blocks.glm)/df.residual(blocks.glm)
+phi.pearson <- summary(blocks.glm)$dispersion
+c("Mean Deviance" = phi.md, "Pearson" = phi.pearson)
+```
+
+Pearson's estimate:
+```{r echo=TRUE}
+round(anova(blocks.glm, test = "F"), 3)
+```
+
+```{r echo=TRUE}
+round(anova(blocks.glm, test = "F", dispersion = phi.md), 3)
+```
+Residual deviance accounted for by Shape is the biggest.
+
+Here are the cofficient estimates:
+```{r echo=FALSE}
+summary(blocks.glm)
+```
+
+```{r include=FALSE}
+# Check linear predictor
+
+eta.log <- blocks.glm$linear.predictors
+work_responses <- resid(blocks.glm, type = "working") + eta.log
+```
+
+```{r echo=FALSE}
+ggplot(blocks.glm, aes(x = eta.log, y = work_responses)) +
+  geom_point() +
+  labs( x = "Linear predictor eta", y = "Working Residuals",
+        title = "Linear predictor eta vs working residuals") +
+  theme(legend.position = "none")
+```
+
+```{r echo=FALSE}
+
+ggplot(blocks, aes(x = eta.log, y = work_responses)) +
+  geom_point() +
+  labs( x = "Eta log", y = "Working Responses",
+        title = "Eta log vs Working Responses") +
+  theme(legend.position = "none") +
+  geom_smooth(family="gamma")
+
+```
+
+#### Additional exercise
+
+Group ages into three categories and then use the six groupings (three ages
+by two blocks shapes) to study the mean-variance relationship. Show that the
+gamma distribution was a good choice for the random component of the model.
+(To help with your R code, there is a good example of this process on pages 429 
+and 430 in the textbook.)
+
+```{r}
+# Define age groups
+
+blocks$AgeGrp <- cut(blocks$Age, breaks = 3)
+```
+
+I've computed the means and variances of each shape/age group and they are plotted here:
+```{r echo=FALSE}
+# Compute means and variances of each shape/age group:
+
+vr <- with(blocks, tapply(Number, list(AgeGrp, Shape), "var" ))
+mn <- with(blocks, tapply(Number, list(AgeGrp, Shape), "mean"))
+
+plot(log(vr) ~ log(mn), las=1, pch=19,
+     xlab="group means", ylab = "group variance")
+
+mf.lm <- lm(c(log(vr)) ~ c(log(mn)))
+abline(coef(mf.lm), lwd = 2)
+```
+
+```{r echo=FALSE}
+coef(mf.lm)[2]
+
+```
+The slope of the line is 2.08. This means that the log of the variance is proportional to 2.08 times the log of the mean. Taking the exponent on each side of the equation, we get the variance is proportional to $\mu^{2.08}$ which is almost the mean squared. This is important because it means the gamma EDM was, in fact, the correct distrbution and appropriately models the mean-variance relationship.
+
+****
+
+Thanks for another excellent semester! Hope you get to relax at some point this summer. All the best.
